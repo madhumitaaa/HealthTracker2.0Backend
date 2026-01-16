@@ -35,6 +35,6 @@ const userSchema = new mongoose.Schema({
 
 // ✅ PRODUCTION: Index for faster refresh token lookups
 userSchema.index({ 'refreshTokens.token': 1 });
-userSchema.index({ email: 1 });
+// Note: email index is created automatically by 'unique: true' on email field
 
 module.exports = mongoose.model('User', userSchema);

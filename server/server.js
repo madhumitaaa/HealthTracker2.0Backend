@@ -196,20 +196,28 @@ mongoose
   });
 
 // ===== GRACEFUL SHUTDOWN =====
+const gracefulShutdown = async () => {
+  try {
+    logger.info('Closing HTTP server');
+    if (mongoose.connection.readyState === 1) {
+      await mongoose.connection.close();
+      logger.info('MongoDB connection closed');
+    }
+    process.exit(0);
+  } catch (err) {
+    logger.error({ error: err.message }, 'Error during shutdown');
+    process.exit(1);
+  }
+};
+
 process.on('SIGTERM', () => {
   logger.info('SIGTERM signal received: closing HTTP server');
-  mongoose.connection.close(() => {
-    logger.info('MongoDB connection closed');
-    process.exit(0);
-  });
+  gracefulShutdown();
 });
 
 process.on('SIGINT', () => {
   logger.info('SIGINT signal received: closing HTTP server');
-  mongoose.connection.close(() => {
-    logger.info('MongoDB connection closed');
-    process.exit(0);
-  });
+  gracefulShutdown();
 });
 
 // Handle uncaught exceptions
@@ -218,7 +226,11 @@ process.on('uncaughtException', (err) => {
   process.exit(1);
 });
 
-// Handle unhandled promise rejections
+// Handle unhandled promise rejections (suppress during shutdown)
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error({ reason, promise }, 'Unhandled rejection');
+  // Ignore rejections during shutdown
+  if (reason && typeof reason === 'object' && Object.keys(reason).length === 0) {
+    return;
+  }
+  logger.error({ reason: String(reason) }, 'Unhandled rejection');
 });
