@@ -1,9 +1,5 @@
 # HealthTracker Backend
 
-A **production-grade** backend application for health tracking and fitness management built with Node.js, Express, and MongoDB.
-
-**Status**: ✅ Production-Ready with advanced features including JWT refresh tokens, async job queues, comprehensive validation, and security hardening.
-
 ## 📋 Table of Contents
 
 - [Features](#features)
@@ -578,14 +574,3 @@ Contributions are welcome! Please follow these steps:
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
----
-
-**Need Help?** 
-- Check [ARCHITECTURE.md](./ARCHITECTURE.md) for detailed system architecture
-- Review `.env.example` for all configuration options
-- See error responses with `status` field in all endpoints
