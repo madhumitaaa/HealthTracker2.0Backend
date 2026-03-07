@@ -94,6 +94,12 @@ router.post(
   auth,
   createEntryValidator,
   asyncHandler(async (req, res) => {
+    // ========== STEP 1: DEBUG LOG ==========
+    console.log('[DEBUG] Creating new entry', {
+      userId: req.userId,
+      requestBody: req.body
+    });
+
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       logger.warn({ userId: req.userId, errors: errors.array() }, 'Entry validation failed');
@@ -122,6 +128,13 @@ router.post(
 
       await entry.save();
 
+      // ========== STEP 2: SUCCESS LOG ==========
+      console.log('[DEBUG] Entry saved', {
+        userId: req.userId,
+        entryId: entry._id,
+        normalizedDate
+      });
+
       logger.info({ userId: req.userId, entryId: entry._id }, 'Entry created successfully');
 
       res.status(201).json({
@@ -130,7 +143,7 @@ router.post(
         data: entry
       });
     } catch (err) {
-      // ✅ PRODUCTION: Handle unique constraint violation
+      // ✅ Handle duplicate daily entry
       if (err.code === 11000 && err.keyPattern?.date && err.keyPattern?.user) {
         logger.info({ userId: req.userId, date: normalizedDate }, 'Entry already exists for this date');
         return res.status(409).json({
@@ -138,6 +151,12 @@ router.post(
           message: 'Entry already exists for this date'
         });
       }
+
+      // ========== STEP 3: ERROR LOG ==========
+      console.error('[DEBUG] Failed to create entry', {
+        userId: req.userId,
+        error: err.message
+      });
 
       logger.error({ userId: req.userId, error: err.message }, 'Failed to create entry');
       throw err;

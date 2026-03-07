@@ -74,7 +74,7 @@ const entrySchema = new mongoose.Schema({
   },
   mood: {
     type: String,
-    enum: ['poor', 'fair', 'good', 'excellent'],
+    enum: ['poor', 'fair', 'good', 'excellent', 'neutral'],
     default: 'neutral'
   },
   waterIntake: {
