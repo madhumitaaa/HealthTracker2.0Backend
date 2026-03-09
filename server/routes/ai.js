@@ -143,10 +143,10 @@ router.post(
       logger.info({ userId: req.userId }, 'Chat completed successfully');
 
       res.json({
-        status: 'success',
-        reply,
-        mode: 'sync' // Indicates synchronous response
-      });
+  status: 'success',
+  message: reply,
+  mode: 'sync'
+});
     } catch (error) {
       logger.error({ userId: req.userId, error: error.message }, 'Chat error');
       res.status(500).json({
