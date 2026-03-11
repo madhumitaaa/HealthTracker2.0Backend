@@ -36,7 +36,8 @@ app.use(cors({
     : [
         'http://localhost:5173',
         'http://localhost:3000',
-        'http://localhost:3001'
+        'http://localhost:3001',
+        'https://d32twhyc64jla0.cloudfront.net'
       ],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
