@@ -57,7 +57,7 @@ app.use((req, res, next) => {
   }, `${req.method} ${req.path}`);
   next();
 });
-
+app.use('/ai', require('./routes/ai'));
 // ===== HEALTH CHECK =====
 // ✅ PRODUCTION: Extended health check with MongoDB and Redis status
 app.get('/api/health', async (req, res) => {

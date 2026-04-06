@@ -1,0 +1,32 @@
+version: "3.9"
+
+services:
+  backend:
+    build: .
+    container_name: healthtracker-backend
+    ports:
+      - "5000:5000"   # expose backend port
+    depends_on:
+      - mongodb
+      - redis
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/healthtracker
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+  mongodb:
+    image: mongo:6
+    container_name: healthtracker-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  redis:
+    image: redis:7
+    container_name: healthtracker-redis
+    ports:
+      - "6379:6379"
+
+volumes:
+  mongo-data:

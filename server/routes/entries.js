@@ -25,15 +25,22 @@ router.get(
   '/dashboard/summary',
   auth,
   asyncHandler(async (req, res) => {
-    logger.info({ userId: req.userId }, 'Fetching dashboard summary');
 
     const now = new Date();
-    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+    // ✅ USE LOCAL TIME (NOT UTC)
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
 
     const entry = await Entry.findOne({
       user: req.userId,
-      date: { $gte: startOfDay, $lte: endOfDay },
+      date: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
     });
 
     res.json({
@@ -47,8 +54,8 @@ router.get(
         symptoms: entry?.symptoms || [],
         mood: entry?.mood || 'neutral',
         waterIntake: entry?.waterIntake || 0,
-        foodIntake: entry?.foodIntake || []
-      }
+        foodIntake: entry?.foodIntake || [],
+      },
     });
   })
 );
@@ -151,7 +158,33 @@ router.post(
     });
   })
 );
+// =========================================================
+// GET SINGLE ENTRY BY ID
+// =========================================================
+router.get(
+  '/:id',
+  auth,
+  asyncHandler(async (req, res) => {
+    const { id } = req.params;
 
+    const entry = await Entry.findOne({
+      _id: id,
+      user: req.userId
+    });
+
+    if (!entry) {
+      return res.status(404).json({
+        status: 'error',
+        message: 'Entry not found'
+      });
+    }
+
+    res.json({
+      status: 'success',
+      data: entry
+    });
+  })
+);
 /* =========================================================
    UPDATE ENTRY BY ID
 ========================================================= */
@@ -234,5 +267,6 @@ router.delete(
     });
   })
 );
+
 
 module.exports = router;

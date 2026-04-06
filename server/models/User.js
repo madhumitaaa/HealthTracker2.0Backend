@@ -20,6 +20,32 @@ const userSchema = new mongoose.Schema({
     required: true,
     minlength: 6
   },
+  profile:{
+    height:{
+      type: Number,
+      min: 50,
+      max: 300
+    },
+    weight:{
+      type: Number,
+      min: 20,
+      max: 500
+    },
+    age:{
+      type: Number,
+      min: 1, 
+      max: 100
+    },
+    gender:{
+      type: String,
+      enum :['male', 'female', 'other']
+    },
+     goal: {
+      type: String,
+      enum: ["lose_weight", "maintain", "gain"],
+      default: "maintain"
+    }
+  },
   // ✅ PRODUCTION: Refresh tokens stored in DB for revocation
   refreshTokens: [{
     token: { type: String, required: true },

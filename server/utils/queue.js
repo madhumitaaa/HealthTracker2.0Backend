@@ -1,55 +1,73 @@
-/**
- * ✅ SYNCHRONOUS MODE: Queue Setup
- * Using synchronous processing for now (Redis removed)
- * Can be re-integrated later with BullMQ when needed
- */
-
+// utils/queue.js
+const { Queue } = require('bullmq'); // removed QueueScheduler
+const Redis = require('ioredis');
 const logger = require('./logger');
 
-// Stub functions for queue operations (not used in sync mode)
-const getQueue = () => null;
+const connection = new Redis({ host: '127.0.0.1', port: 6379 });
 
-/**
- * Check if Redis is available
- * Returns false since we're not using Redis
- */
+// Queues
+const aiChatQueue = new Queue('aiChat', { connection });
+const aiReportQueue = new Queue('weeklyReport', { connection });
+const routineQueue = new Queue('aiRoutine', { connection });
+
+// Redis check
 const isRedisAvailable = async () => {
-  return false;
+  try {
+    return (await connection.ping()) === 'PONG';
+  } catch (err) {
+    logger.warn({ error: err.message }, 'Redis not available');
+    return false;
+  }
 };
 
-/**
- * Enqueue AI chat job (not used in sync mode)
- */
+// Enqueue jobs
 const enqueueAiChat = async (userId, message) => {
-  return null;
+  const job = await aiChatQueue.add('chat', { userId, message });
+  return job.id;
 };
-
-/**
- * Enqueue weekly report job (not used in sync mode)
- */
 const enqueueWeeklyReport = async (userId) => {
-  return null;
+  const job = await aiReportQueue.add('weeklyReport', { userId });
+  return job.id;
+};
+const enqueueAiRoutine = async (userId, prompt) => {
+  const job = await routineQueue.add('routine', { userId, prompt });
+  return job.id;
 };
 
-/**
- * Get job status (not used in sync mode)
- */
-const getJobStatus = async (jobId) => {
-  return { status: 'not-available' };
-};
+// Job status
+// Job status
+const getJobStatus = async (jobId, queueName) => {
+  // If no queueName provided, try all queues
+  const queues = {
+    aiChat: aiChatQueue,
+    weeklyReport: aiReportQueue,
+    aiRoutine: routineQueue
+  };
 
-/**
- * Clean up old jobs (not used in sync mode)
- */
-const cleanupOldJobs = async () => {
-  // No-op in sync mode
+  if (queueName) {
+    const queue = queues[queueName];
+    if (!queue) return { status: 'not-found' };
+    const job = await queue.getJob(jobId);
+    if (!job) return { status: 'not-found' };
+    const state = await job.getState();
+    return { status: state, data: job.data };
+  } else {
+    // Try to find job in any queue
+    for (const qName of Object.keys(queues)) {
+      const job = await queues[qName].getJob(jobId);
+      if (job) {
+        const state = await job.getState();
+        return { status: state, data: job.data, queueName: qName };
+      }
+    }
+    return { status: 'not-found' };
+  }
 };
 
 module.exports = {
-  getQueue,
   enqueueAiChat,
   enqueueWeeklyReport,
+  enqueueAiRoutine,
   getJobStatus,
-  cleanupOldJobs,
   isRedisAvailable
 };

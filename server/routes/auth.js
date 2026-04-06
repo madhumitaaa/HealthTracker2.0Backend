@@ -61,7 +61,7 @@ router.post(
       });
     }
 
-    const { name, email, password } = req.body;
+   const { name, email, password, height, weight, age, gender, goal } = req.body;
 
     let user = await User.findOne({ email });
     if (user) {
@@ -73,7 +73,18 @@ router.post(
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    user = new User({ name, email, password: hashedPassword });
+   user = new User({
+  name,
+  email,
+  password: hashedPassword,
+  profile: {
+    height, // in cm
+    weight, // in kg
+    age,
+    gender,
+    goal
+  }
+});
     await user.save();
 
     const { accessToken, refreshToken } = generateTokens(user._id);
@@ -88,14 +99,17 @@ router.post(
     logger.info({ userId: user._id, email }, 'User registered successfully');
 
     // ✅ BACKWARD COMPATIBILITY: Also return legacy 'token' field
-    res.status(201).json({
-      status: 'success',
-      message: 'User registered successfully',
-      accessToken,
-      refreshToken,
-      token: accessToken, // Legacy field for existing frontend
-      userId: user._id
-    });
+   res.status(201).json({
+  status: 'success',
+  message: 'User registered successfully',
+  data: {
+    accessToken,
+    refreshToken,
+    token: accessToken,
+    userId: user._id,
+    profile: user.profile
+  }
+});
   })
 );
 
@@ -151,13 +165,16 @@ router.post(
 
     // ✅ BACKWARD COMPATIBILITY: Also return legacy 'token' field
     res.json({
-      status: 'success',
-      message: 'Login successful',
-      accessToken,
-      refreshToken,
-      token: accessToken, // Legacy field for existing frontend
-      userId: user._id
-    });
+  status: 'success',
+  message: 'Login successful',
+  data: {
+    accessToken,
+    refreshToken,
+    token: accessToken, // legacy support
+    userId: user._id,
+    profile: user.profile
+  }
+});
   })
 );
 
@@ -281,6 +298,44 @@ router.post(
     });
   })
 );
+
+router.put(
+  '/profile',
+  auth,
+  asyncHandler(async(req,res)=>{
+    const{height,weight,age,gender,goal}=req.body;
+    const user=await User.findById(req.userId);
+    if(!user){
+      return res.status(404).json({
+        status:'error',
+        message:'User not found'
+      });
+    }
+     if (height !== undefined) user.profile.height = height;
+    if (weight !== undefined) user.profile.weight = weight;
+    if (age !== undefined) user.profile.age = age;
+    if (gender !== undefined) user.profile.gender = gender;
+    if (goal !== undefined) user.profile.goal = goal;
+if(user.profile.height&& user.profile.weight)
+{
+  const heightInMeters = user.profile.height / 100;
+  user.profile.bmi=user.profile.weight/(heightInMeters*heightInMeters);
+
+}
+    await user.save();
+      res.json({
+      status: 'success',
+      message: 'Profile updated successfully',
+      profile: user.profile
+    });
+
+  })
+)
+
+
+
+
+
 
 module.exports = router;
 
